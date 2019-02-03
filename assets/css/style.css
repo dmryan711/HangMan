@@ -1,0 +1,45 @@
+
+.box{
+    border: solid black 2px;
+
+}
+.test{
+    background-color: black;
+    height:33vh;
+    
+
+}
+
+.test2{
+    background-color:blue;
+    height:20vh;
+
+}
+
+.test3{
+    background-color: green;
+    height:20vh;
+
+}
+
+#postBottom{
+    position: absolute;
+    width:50%;
+    height: 15px;
+    background-color: brown;
+    bottom:0px;
+}
+
+#postLeft{
+    position: absolute;
+    width:15px;
+    height:90%;
+    left:0px;
+    bottom:0px;
+
+    background-color: brown;
+}
+
+.alignCenter{
+    text-align:center;
+}
