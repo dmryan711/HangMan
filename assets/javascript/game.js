@@ -1,14 +1,3 @@
-//Global word bank of potential words
-var wordBank = ["goose","moose","hand","band","sand","country","lamp","hammer","promise", "maniacal",
- "string", "taste","shelf","fool", "excite", "rail", "release", "enjoy", "trade", "girl","sticks","pretend",
- "relieved", "pickle","volleyball","plate","puncture", "panoramic","name","motionless", "wail","sad", "knowledge",
-  "water", "smash", "produce","yam","large","care","observe", "name", "hulking", "jaded", "wood","insidious", "rate",
-  "pretty", "paddle", "damp", "nation", "dance", "colorful", "limsy", "curl", "park", "childlike","fierce", "fair", "gun", 
-  "soothe", "abounding", "trace","nest" , "swanky","battle", "wiry", "nose", "broken", "tight", "reduce", "stormy", 
-  "homeless", "uppity", "look","exam", "nervous", "joke", "fix","simplistic", "level", "paint", "gratis", "spiders", 
-  "wire", "obtainable", "humdrum", "tesseract", "change", "piquant", "witty", "explain", "delay", "mutter", "languid",
-   "woebegone", "disturbed", "slow", "romantic", "caption", "squander", "rule", "list", "ambiguous", "present", "telephone","butter"];
-
 var heroBank = [];
 var hero;
 var heroBlankArray = [];
@@ -16,6 +5,8 @@ var heroNameArray = [];
 var gameRoundOn = false;  
 var keysPressedCorrect = [];
 var keysPressedWrong = [];
+var guessesLeft = 5;
+var herosRemaingCount = 0;
 
   
   //selectRandomWord(wordBank);
@@ -27,42 +18,45 @@ var keysPressedWrong = [];
     this.hasPlayed = playedOrNot;
 
   }
-  //Create SuperHeros
-  //IronMan
-  ironMan = new SuperHero("Iron Man","assets/images/ironman.jpg");
-  hasPlayed = false;
-  heroBank.push(ironMan);
 
-  //Thor
-  thor =  new SuperHero("Thor","assets/images/thor.jpg");
-  hasPlayed = false;
-  heroBank.push(thor);
+  function createGameBank(){
+    //Create SuperHeros & Add to Array initially
+    //IronMan
+    ironMan = new SuperHero("Iron Man","assets/images/ironman.jpg",false);
+    heroBank.push(ironMan);
 
-  //SpiderMan
-  spiderMan =  new SuperHero("Spiderman","assets/images/spiderman.jpg");
-  hasPlayed = false;
-  heroBank.push(spiderMan);
+    //Thor
+    thor =  new SuperHero("Thor","assets/images/thor.jpg",false);
+    heroBank.push(thor);
 
-  //Hulk
-  hulk = new SuperHero("Hulk","assets/images/hulk.jpg");
-  hasPlayed = false;
-  heroBank.push(hulk);
+    //SpiderMan
+    spiderMan =  new SuperHero("Spiderman","assets/images/spiderman.jpg",false);
+    heroBank.push(spiderMan);
 
-  //Captain America
-  captainAmerica = new SuperHero("Captain America","assets/images/captainamerica.jpg");
-  hasPlayed = false;
-  heroBank.push(captainAmerica);
+    //Hulk
+    hulk = new SuperHero("Hulk","assets/images/hulk.jpg",false);
+    heroBank.push(hulk);
+
+    //Captain America
+    captainAmerica = new SuperHero("Captain America","assets/images/captainamerica.jpg",false);
+    heroBank.push(captainAmerica);
+  }
+  
+ 
 
 
 
 //Helper Functions
 //Select Random Hero
 function selectRandomHero(arrayOfHeroObjects){
-
-    hero = arrayOfHeroObjects[Math.floor(Math.random()*arrayOfHeroObjects.length)];
-   
-    console.log(hero);
-    return hero;
+    if(arrayOfHeroObjects instanceof Array){
+        hero = arrayOfHeroObjects[Math.floor(Math.random()*arrayOfHeroObjects.length)];
+        if(hero.hasPlayed){
+            selectRandomHero(heroBank);
+        }
+        console.log(hero);
+        return hero;
+    }
 }
 
 function startGameRound(){
@@ -70,8 +64,6 @@ function startGameRound(){
     hero = selectRandomHero(heroBank);
    heroNameArray = changeStringToArrayOfChars(hero.name);
    heroBlankArray = createBlankArrayOfButtonsFromHeroNameArray(heroNameArray);
-   console.log(heroNameArray);
-   console.log(heroBlankArray);
    addImageToUI(hero);
    setUpGameUI(heroBlankArray);
 
@@ -153,8 +145,9 @@ function setUpGameUI(array){
             }
         }
         var wrongAnswerTitle =  document.createElement('h3');
-        wrongAnswerTitle.innerHTML = "Wrong Guesses Here";
+        wrongAnswerTitle.innerHTML = "Wrong Guesses Left: "+guessesLeft;
         wrongAnswerTitle.class = "display-4 mt-3";
+        wrongAnswerTitle.id = "wrong-guesses-title";
         wrongAnswersSection.appendChild(wrongAnswerTitle);
 
 
@@ -171,15 +164,143 @@ function correctKeyLogic(letter){
             heroBlankArray[indexOfLetter].className = "btn btn-success mr-3 mt-1";
             heroBlankArray[indexOfLetter].id = indexOfLetter;
             heroNameArray.splice(indexOfLetter,1," ");
+        }   
+}
+
+
+function didUserWin(){
+   var array = hero.name.split('');
+    for(var i = 0;i<heroBlankArray.length;i++){
+       console.log("HeroBlank Array Letter: "+heroBlankArray[i].innerHTML);
+       console.log("Real Hero Array Letter: "+array[i]);
+
+       if(heroBlankArray[i].innerHTML !== array[i]){
+           console.log("not all letters are guessed "+heroBlankArray[i]+" does not equal "+array[i]);
+           return;
+       }
+    }
+
+    //User Beat the Round, check if they won the game or if they just won a round
+    console.log("Survived the For Loop comparison, everything matches");
+    hero.hasPlayed = true;
+    for(var i = 0;i<heroBank.length;i++){
+        console.log("Hero "+heroBank[i].name+" "+heroBank[i].hasPlayed);
+        //Count the heros left
+        if(heroBank[i].hasPlayed === false){
+            herosRemaingCount++;
         }
+    }
+    //If all of the heros are gone, congratulate them and ask for reset
+    if (herosRemaingCount === 0){
+        //Reset Game
+        displayEndGameModal();
+    }else{
+        //Tell them they beat a round and start a new one
+        displayWinRoundModal();
+    }
+}
+
+function displayWinRoundModal(){
+    var herosRemaingString;
+    if (herosRemaingCount === 1){
+        herosRemaingString = "There is " + herosRemaingCount + " hero remaining.";
+    }else{
+        herosRemaingString = "There are " + herosRemaingCount + " heros remaining.";
+    }
+    
+    $('#modalMessage').text(herosRemaingString);
+    $('#gameStateButton').text("Keep Going");
+    $('#gameStateButton').removeClass();
+    $('#gameStateButton').addClass('btn btn-primary');
+    $("#winModal").modal({
+        backdrop: 'static',
+        keyboard: false
+    });
+    dumpRoundData();
+    $('#winModal').modal('show');
+}
+
+
+function dumpRoundData(){
+    keysPressedCorrect= [];
+    keysPressedWrong = [];
+    // heroBank = [];
+    heroBlankArray = [];
+    heroNameArray = [];
+    //guessesLeft = 5;
+    herosRemaingCount = 0;
+}
+
+
+function displayEndGameModal(){
+    var herosRemaingString = "There are no heros remaining, you beat the Game!";
+    $('#modalMessage').text(herosRemaingString);
+    $('#gameStateButton').text("Start Over");
+    $('#gameStateButton').removeClass();
+    $('#gameStateButton').addClass('btn btn-success');
+    $("#winModal").modal({
+        backdrop: 'static',
+        keyboard: false
+    });
+    $('#winModal').modal('show');
+ 
+
+}
+
+function displayLoseGameModal(){
+    $('#modalMessage').text("You ran out of guesses, sorry.");
+    var $button = $('#gameStateButton');
+    $button.text("Start Over");
+    $('#gameStateButton').removeClass();
+    $button.addClass('btn btn-danger');
+    $("#winModal").modal({
+        backdrop: 'static',
+        keyboard: false
+    });
+    $('#winModal').modal('show');
+ 
+
 }
 
 
 
+function resetGame(){
+    //DumpData
+     heroBank = [];
+     heroBlankArray = [];
+     heroNameArray = [];
+     gameRoundOn = false;  
+     keysPressedCorrect = [];
+     keysPressedWrong = [];
+     guessesLeft = 5;
+     herosRemaingCount = 0;
+    var playGameButtonElement = document.getElementById('play-game');
+    playGameButtonElement.className = "btn btn-primary active";
+    playGameButtonElement.removeAttribute("disabled","disabled");
+
+    //Kill Game UI
+    $("#hero-image").remove(); // removes image
+
+    //removes guess title and guess tiles
+    var guessUI = document.getElementById("guessBody");
+    while(guessUI.firstChild){
+        guessUI.removeChild(guessUI.firstChild);
+    }
+
+    //removes guess wrong title and wrong tiles
+    var wrongUI = document.getElementById("wrong-answers");
+    while(wrongUI.firstChild){
+        wrongUI.removeChild(wrongUI.firstChild);
+    }
+
+    //Change Play Game to Play Again?
+    $("#play-game").text = "Play Again?";
+}
 
 
-
-
+function endGame(){
+    
+}
 
 
 
@@ -187,9 +308,31 @@ function correctKeyLogic(letter){
 var playGameButtonElement = document.getElementById('play-game');
 
 playGameButtonElement.addEventListener('click', event => {
+
+    playGameButtonElement.className = "btn btn-primary disabled";
+    playGameButtonElement.setAttribute("disabled","disabled");
+    //Create Game
+    createGameBank();
     //Start Game Here
     startGameRound();
   });
+
+  var gameStateModalButton = document.getElementById('gameStateButton');
+
+  gameStateModalButton.addEventListener('click', event =>{
+      //If Game Text is Error, something went wrong
+      if(gameStateModalButton.innerHTML === "ERROR"){
+
+      }else if(gameStateModalButton.innerHTML === "Keep Going"){
+        $('#winModal').modal('hide');
+        console.log("Start Game Round");
+          startGameRound();
+      }else if (gameStateModalButton.innerHTML === "Start Over"){
+        $('#winModal').modal('hide');
+            resetGame();
+
+      }
+  })
 
 //KEY INPUT DETECTION
 document.addEventListener('keydown', function(event){
@@ -214,8 +357,9 @@ document.addEventListener('keydown', function(event){
             if(heroNameArray.indexOf(keyPressedLowercase)!==-1){
                 correctKeyLogic(keyPressedLowercase);
             }
+            //Check if user won, since this is a correct key, and it could be the last correct key
+            didUserWin();
         }else{ //The key may be a variation of correct, checking to see
-            console.log("The key may be correct, checking to see if it is");
             if(((keysPressedWrong.indexOf(keyPressed) !== -1)
             ||(keysPressedWrong.indexOf(keyPressedLowercase) !== -1)
             || (keysPressedWrong.indexOf(keyPressedUppercase) !== -1)
@@ -224,120 +368,34 @@ document.addEventListener('keydown', function(event){
                 ||(keysPressedCorrect.indexOf(keyPressedLowercase) !== -1)
                 || (keysPressedCorrect.indexOf(keyPressedUppercase) !== -1))){
             
-                console.log("The key is in the correct list or the wrong list");
             }else{//Log as Error
-                console.log("They key is not correct")
                 
                 //Add Key to Wrong Answer Array
                 keysPressedWrong.push(keyPressed);
                 if(keyPressed == keyPressedUppercase){
                    
                     keysPressedWrong.push(keyPressedLowercase);
-                    console.log("Key Pressed Wrong is uppercase" + keysPressedWrong);
 
                 }else{
                     keysPressedWrong.push(keyPressedUppercase);
-                    console.log("Key Pressed is lower case"+ keysPressedWrong);
                 }
-                //Create Incorrect Answer buttons
+                if(guessesLeft>0){
+                    //Decrease Guess Remaining
+                    guessesLeft--;
+
+                    //Update Guesses Left UI
+                    document.getElementById('wrong-guesses-title').innerHTML = "Wrong Guesses Left: "+guessesLeft;
+                }else{
+                    displayLoseGameModal();
+                    return;
+                }
+                
+                //Create Incorrect Answer tiles
                 var wrongAnswerbutton = document.createElement("button");
                 wrongAnswerbutton.innerHTML = keyPressed;
                 wrongAnswerbutton.className = "btn btn-danger mr-3 mt-1 wrong-answer";
-                document.getElementById('wrong-answers').appendChild(wrongAnswerbutton);
-                
-            }
-    
-            
+                document.getElementById('wrong-answers').appendChild(wrongAnswerbutton);  
+            }  
         }
     }
-    
-
-
 }); 
-    
-
-
-
-
-//    This works
-//   var im = document.createElement('img');
-//   im.src=ironMan.imageSrc;
-//   document.body.appendChild(im);
-
-
-//   var th = document.createElement('img');
-//   th.src=thor.imageSrc;
-//   document.body.appendChild(th);
-
-
-//   var sm = document.createElement('img');
-//   sm.src=spiderMan.imageSrc;
-//   document.body.appendChild(sm);
-
-
-//   var ca = document.createElement('img');
-//   ca.src=captainAmerica.imageSrc;
-//   document.body.appendChild(ca);
-
-
-
-
-  
-
-//    function selectRandomWord(arrayOfStrings){
-//       if(checkArrayForTypeAndStrings(arrayOfStrings)){
-//         //Pick a selection at random
-//          word = arrayOfStrings[Math.floor(Math.random()*arrayOfStrings.length)];
-//         console.log(word);
-//       }    
-//    }
-
-//    function checkArrayForTypeAndStrings(arrayOfStrings){
-//         if(arrayOfStrings instanceof Array){ //Check that it is an array
-//            console.log("It is an Array");
-//            for(var i=0;i<arrayOfStrings.length;i++){
-//                if(!(typeof arrayOfStrings[i] === 'string')){
-//                 console.log("Not a string at index: "+ i);
-//                     return false;
-//                }else{
-//                     console.log("String at index: "+ i);
-//                } 
-//            }
-//            console.log("It's and Array, and everything is a string");
-//            return true;
-//        }else{
-//            console.log("It is not an array");
-//            return false;
-//        }
-//    }
-
-
-//Test Cases
-
-// Test Cases for checkArrayForTypeAndStrings
-
-//    var foo = 3;
-//    var bar = 4;
-
-//    var testCase1NotAnArray = "string";
-//    var testCase2ArrayButNoStrings = [foo,bar];
-//    var testCase3ArrayWithSomeStrings = ["string",foo,"string2",bar];
-
-//    console.log("Test Case 1: Not An Array");
-//    checkArrayForTypeAndStrings(testCase1NotAnArray);
-
-//     console.log("Test case 2: Array but No strings");
-//     checkArrayForTypeAndStrings(testCase2ArrayButNoStrings);
-
-//     console.log("Test case 3: Array with some strings");
-//     checkArrayForTypeAndStrings(testCase3ArrayWithSomeStrings);
-
-//     console.log("Test Case 4: Array with all strings");
-//     checkArrayForTypeAndStrings(wordBank);
-   
-
-   //    var $cols = $('.col-lg-1');
-
-//    $cols.each(function(index){
-//        console.log($cols[index]);
-//    })
